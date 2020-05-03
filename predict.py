@@ -15,19 +15,19 @@ except:
        import tensorflow as tf
        
 
-def ECFP_num_prediction_batch(ls_smi, batch_size=2048, model_IE=None, model_EA=None):
+def ECFPNUM_prediction_batch(ls_smi, batch_size=2048, model_IE=None, model_EA=None):
        '''
-       this function is to predict IE and EA from ECFP_num batch by batch, when the amount of data is massive.
+       this function is to predict IE and EA from ECFPNUM batch by batch, when the amount of data is massive.
        Warning : you will lose some molecules by using this mehtod. 
        In this stage, I separate IE and EA temporily, in the future I consider train a model which predict IE and EA simultaneous
        But, I am not sure whether doing so can lead to a better prediction. 
 
        Example: 
 
-       model_IE = load_model("model_ECFP/ECFP_num_IE.h5")
-       model_EA = load_model("model_ECFP/ECFP_num_EA.h5")
+       model_IE = load_model("model_ECFP/ECFPNUM_IE.h5")
+       model_EA = load_model("model_ECFP/ECFPNUM_EA.h5")
        ls_smi = pd.read_csv("OUTPUT")['smiles'].tolist()
-       ls_smi_new, IE, EA = ECFP_num_prediction_batch(ls_smi, batch_size=1024, model_IE=model_IE, model_EA=model_EA)
+       ls_smi_new, IE, EA = ECFPNUM_prediction_batch(ls_smi, batch_size=1024, model_IE=model_IE, model_EA=model_EA)
 
        '''
        total_num = (len(ls_smi)//batch_size)*batch_size
@@ -38,9 +38,9 @@ def ECFP_num_prediction_batch(ls_smi, batch_size=2048, model_IE=None, model_EA=N
        out_EA = [] 
        for epoch in range(epochs):
               print(epoch)
-              fp_ECFP_num = molecules(ls_smi[start:start+batch_size]).ECFP_num()
-              out_IE.append(model_IE.predict(fp_ECFP_num))
-              out_EA.append(model_EA.predict(fp_ECFP_num))
+              fp_ECFPNUM = molecules(ls_smi[start:start+batch_size]).ECFPNUM()
+              out_IE.append(model_IE.predict(fp_ECFPNUM))
+              out_EA.append(model_EA.predict(fp_ECFPNUM))
               start += batch_size
        out_IE = np.concatenate(out_IE, axis=0)
        out_EA = np.concatenate(out_EA, axis=0)
@@ -48,18 +48,18 @@ def ECFP_num_prediction_batch(ls_smi, batch_size=2048, model_IE=None, model_EA=N
        return ls_smi[:total_num], out_IE, out_EA
 
 
-def ECFP_num_prediction(ls_smi, model_IE=None, model_EA=None):
+def ECFPNUM_prediction(ls_smi, model_IE=None, model_EA=None):
        '''
-       this function is to predict IE and EA from ECFP_num for all the molecules at once.
+       this function is to predict IE and EA from ECFPNUM for all the molecules at once.
        Example: 
 
-       model_IE = load_model("model_ECFP/ECFP_num_IE.h5")
-       model_EA = load_model("model_ECFP/ECFP_num_EA.h5")
+       model_IE = load_model("model_ECFP/ECFPNUM_IE.h5")
+       model_EA = load_model("model_ECFP/ECFPNUM_EA.h5")
        ls_smi = pd.read_csv("OUTPUT")['smiles'].tolist()
-       IE, EA = ECFP_num_prediction(ls_smi, model_IE=model_IE, model_EA=model_EA)
+       IE, EA = ECFPNUM_prediction(ls_smi, model_IE=model_IE, model_EA=model_EA)
        '''
-       fp_ECFP_num = molecules(ls_smi).ECFP_num()
-       return model_IE.predict(fp_ECFP_num), model_EA.predict(fp_ECFP_num)
+       fp_ECFPNUM = molecules(ls_smi).ECFPNUM()
+       return model_IE.predict(fp_ECFPNUM), model_EA.predict(fp_ECFPNUM)
 
 
 def SMILES_onehot_prediction_batch(ls_smi, model_name=None, char_set=None, data_MP=None, batch_size=1024):
@@ -148,10 +148,10 @@ if __name__ == '__main__':
        
        start = time.time()
        
-       model_IE = load_model("model_ECFP/ECFP_num_IE.h5")
-       model_EA = load_model("model_ECFP/ECFP_num_EA.h5")
+       model_IE = load_model("model_ECFP/ECFPNUM_IE.h5")
+       model_EA = load_model("model_ECFP/ECFPNUM_EA.h5")
        ls_smi = ['CC(Cl)OCC#N','CC(Cl)CO','CC(C)CCC(F)(F)F','ClCOC1CO1','CCC(C)CC(F)(F)F','OCF','CF']
-       IE, EA = ECFP_num_prediction(ls_smi, model_IE=model_IE, model_EA=model_EA)
+       IE, EA = ECFPNUM_prediction(ls_smi, model_IE=model_IE, model_EA=model_EA)
 
        data = pd.DataFrame(columns=['smiles', 'IE', 'EA'])
        data['smiles'] = ls_smi
@@ -166,10 +166,10 @@ if __name__ == '__main__':
        
        # start = time.time()
        
-       # model_IE = load_model("model_ECFP/ECFP_num_IE.h5")
-       # model_EA = load_model("model_ECFP/ECFP_num_EA.h5")
+       # model_IE = load_model("model_ECFP/ECFPNUM_IE.h5")
+       # model_EA = load_model("model_ECFP/ECFPNUM_EA.h5")
        # ls_smi = pd.read_csv("OUTPUT_multi_latest/all_le_40.csv")['smiles'].tolist()[:100000]
-       # ls_smi_new, IE, EA = ECFP_num_prediction_batch(ls_smi, model_IE=model_IE, model_EA=model_EA)
+       # ls_smi_new, IE, EA = ECFPNUM_prediction_batch(ls_smi, model_IE=model_IE, model_EA=model_EA)
 
        # data = pd.DataFrame(columns=['smiles', 'IE', 'EA'])
        # data['smiles'] = ls_smi_new

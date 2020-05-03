@@ -55,7 +55,7 @@ class molecules():
                 arr_fp[i,j] = fp[j]
         return arr_fp
         
-    def ECFP_num(self, radius=2, nbits=2048):
+    def ECFPNUM(self, radius=2, nbits=2048):
         '''
         convert a list of smiles into ECFP_num array
         '''
@@ -77,6 +77,10 @@ class molecules():
         '''
         this function is to convert the smile inton one-hot encoding. 
         Parameter char_set includes all the character in all the SMILES. 
+        
+        If one of characters in a SMILES is not included in char_set,
+        then the SMILES will be removed from the SMILES list and this function
+        will return a new SMIELS list.
         '''
         
         char_to_int = dict((c,i) for i,c in enumerate(char_set))

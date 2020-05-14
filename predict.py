@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error
-from .RNN_property_predictor import Model
-from .feature import molecules
+from RNN_property_predictor import Model
+from feature import molecules
 import time
 # cannot sure which version of tensorflow is
 try:
@@ -141,8 +141,8 @@ def SMILES_onehot_prediction(ls_smi, model_IE=None, model_EA=None, char_set=None
        '''
        
        #========= IE and EA normalization =========
-       IE = np.asarray(data_MP.values[:,1], dtype=np.float32)
-       EA = np.asarray(data_MP.values[:,2], dtype=np.float32) 
+       IE = np.asarray(data_MP.values[:,1], dtype=np.float32).reshape(-1, 1)
+       EA = np.asarray(data_MP.values[:,2], dtype=np.float32).reshape(-1, 1)
        scaler_IE=StandardScaler()
        scaler_IE.fit(IE)
 
@@ -150,16 +150,13 @@ def SMILES_onehot_prediction(ls_smi, model_IE=None, model_EA=None, char_set=None
        scaler_EA.fit(EA)
        #===========================================
        tf.reset_default_graph()
-       model = Model(seqlen_x=40, dim_x=39, dim_y=2, char_set=char_set)
+       model = Model(seqlen_x=40, dim_x=39, dim_y=1, dim_z=100, dim_h=250, n_hidden=3, batch_size=32, char_set=char_set)
 
        with model.session:
               model.reload(model_name=model_IE)
               X, ls_smi_new = molecules(ls_smi).one_hot(char_set)
               out_IE = scaler_IE.inverse_transform(model.predict(X))
-       
-       tf.reset_default_graph()
 
-       with model.session:
               model.reload(model_name=model_EA)
               X, ls_smi_new = molecules(ls_smi).one_hot(char_set)
               out_EA = scaler_EA.inverse_transform(model.predict(X))
@@ -177,21 +174,21 @@ def SMILES_onehot_prediction(ls_smi, model_IE=None, model_EA=None, char_set=None
         
 if __name__ == '__main__':
        
-       start = time.time()
+       # start = time.time()
        
-       model_IE = load_model("model_ECFP/ECFPNUM_IE.h5")
-       model_EA = load_model("model_ECFP/ECFPNUM_EA.h5")
-       ls_smi = ['CC(Cl)OCC#N','CC(Cl)CO','CC(C)CCC(F)(F)F','ClCOC1CO1','CCC(C)CC(F)(F)F','OCF','CF']
-       IE, EA = ECFPNUM_prediction(ls_smi, model_IE=model_IE, model_EA=model_EA)
+       # model_IE = load_model("model_ECFP/ECFPNUM_IE.h5")
+       # model_EA = load_model("model_ECFP/ECFPNUM_EA.h5")
+       # ls_smi = ['CC(Cl)OCC#N','CC(Cl)CO','CC(C)CCC(F)(F)F','ClCOC1CO1','CCC(C)CC(F)(F)F','OCF','CF']
+       # IE, EA = ECFPNUM_prediction(ls_smi, model_IE=model_IE, model_EA=model_EA)
 
-       data = pd.DataFrame(columns=['smiles', 'IE', 'EA'])
-       data['smiles'] = ls_smi
-       data['IE'] = IE
-       data['EA'] = EA
-       data.to_csv("result_ECFPNUM.csv", index=False)
+       # data = pd.DataFrame(columns=['smiles', 'IE', 'EA'])
+       # data['smiles'] = ls_smi
+       # data['IE'] = IE
+       # data['EA'] = EA
+       # data.to_csv("result_ECFPNUM.csv", index=False)
        
-       end = time.time()
-       print("the execution time "+str(end-start))
+       # end = time.time()
+       # print("the execution time "+str(end-start))
 
 
        
@@ -214,15 +211,17 @@ if __name__ == '__main__':
 
 
 
-       # start = time.time()
+       start = time.time()
 
-       # char_set=[" ", "@", "H", "N", "S", "o", "i", "6", "I", "]", "P", "5", ")", "4", "8", "B", "F", 
-       #        "3", "9", "c", "-", "2", "p", "0", "n", "C", "(", "=", "+", "#", "1", "/", "7", 
-       #        "s", "O", "[", "Cl", "Br", "\\"]
-       # data_MP = pd.read_csv('MP_clean_canonize_cut.csv')
+       char_set=[" ", "@", "H", "N", "S", "o", "i", "6", "I", "]", "P", "5", ")", "4", "8", "B", "F", 
+              "3", "9", "c", "-", "2", "p", "0", "n", "C", "(", "=", "+", "#", "1", "/", "7", 
+              "s", "O", "[", "Cl", "Br", "\\"]
+       data_MP = pd.read_csv('MP_clean_canonize_cut.csv')
+       ls_smi = data_MP['smiles'].tolist()
        # ls_smi = ['CC(Cl)OCC#N','CC(Cl)CO','CC(C)CCC(F)(F)F','ClCOC1CO1','CCC(C)CC(F)(F)F','OCF','CF']
-       # ls_smi_new, IE, EA = SMILES_onehot_prediction(ls_smi, model_name='model_SMILES/model',char_set=char_set, data_MP=data_MP)
        
+       ls_smi_new, IE, EA = SMILES_onehot_prediction(ls_smi, model_IE='model_RNN/RNN_model_IE.ckpt', 
+                                                     model_EA='model_RNN/RNN_model_EA.ckpt',char_set=char_set, data_MP=data_MP)
        # data = pd.DataFrame(columns=['smiles', 'IE', 'EA'])
        # data['smiles'] = ls_smi_new
        # data['IE'] = IE

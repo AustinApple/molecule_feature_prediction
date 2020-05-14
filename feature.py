@@ -9,9 +9,12 @@ import os
 import openbabel
 import argparse
 from biopandas.mol2 import PandasMol2
-# from keras.models import load_model
+from keras.models import load_model
 import tensorflow
-from tensorflow.keras import preprocessing
+try:
+    from tensorflow.keras import preprocessing
+except:
+    from tensorflow.contrib.keras import preprocessing
 
 
 class molecules():

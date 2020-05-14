@@ -9,7 +9,7 @@ import os
 import openbabel
 import argparse
 from biopandas.mol2 import PandasMol2
-from keras.models import load_model
+# from keras.models import load_model
 import tensorflow
 from tensorflow.keras import preprocessing
 
@@ -118,6 +118,51 @@ class molecules():
   
 
         return one_hot, self.ls_smiles
+
+
+    def one_hot_RNN(self, char_set):
+        '''
+        this function is to convert the smile inton one-hot encoding. 
+        Parameter char_set includes all the character in all the SMILES. 
+        
+        If one of characters in a SMILES is not included in char_set,
+        then the SMILES will be removed from the SMILES list and this function
+        will return a new SMIELS list.
+        '''
+        
+        char_to_int = dict((c,i) for i,c in enumerate(char_set))
+        list_seq=[]
+        
+        for s in self.ls_smiles:
+            
+            seq=[]                      
+            j=0
+            while j<len(s):
+                if j<len(s)-1 and s[j:j+2] in char_set:
+                    seq.append(char_to_int[s[j:j+2]])
+                    j=j+2
+                elif s[j] in char_set:
+                    seq.append(char_to_int[s[j]])
+                    j=j+1
+            list_seq.append(seq)
+        
+        
+            
+            
+        list_seq = preprocessing.sequence.pad_sequences(list_seq, maxlen=40, padding='post')
+        
+        one_hot = np.zeros((list_seq.shape[0], list_seq.shape[1]+4, len(char_set)), dtype=np.int8)
+
+        for si, ss in enumerate(list_seq):
+            for cj, cc in enumerate(ss):
+                one_hot[si,cj+1,cc] = 1
+            
+            one_hot[si,-1,0] = 1
+            one_hot[si,-2,0] = 1
+            one_hot[si,-3,0] = 1
+
+
+        return one_hot[:,0:-1,:], one_hot[:,1:,:]
 
 def check_in_char_set(ls_smiles, char_set):
     '''

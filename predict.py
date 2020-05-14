@@ -1,11 +1,10 @@
 from keras.models import load_model
 import numpy as np
 import pandas as pd
-import feature
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error
-from RNN_property_predictor import Model
-from feature import molecules, check_in_char_set
+from .RNN_property_predictor import Model
+from .feature import molecules
 import time
 # cannot sure which version of tensorflow is
 try:
@@ -62,7 +61,7 @@ def ECFPNUM_prediction(ls_smi, model_IE=None, model_EA=None):
        return model_IE.predict(fp_ECFPNUM), model_EA.predict(fp_ECFPNUM)
 
 
-def SMILES_onehot_prediction_batch(ls_smi, model_name=None, char_set=None, data_MP=None, batch_size=1024):
+def SMILES_onehot_prediction_batch(ls_smi, model_IE=None, model_EA=None, char_set=None, data_MP=None, batch_size=1024):
        '''
        the function is to predict IE and EA from SMILES one-hot encoding batch by batch, when the amount of data is massive. 
        It will return the prediction IE and EA simultaneously. 
@@ -78,35 +77,55 @@ def SMILES_onehot_prediction_batch(ls_smi, model_name=None, char_set=None, data_
        '''
        
        #========= normalization =========
-       Y = np.asarray(data_MP.values[:,1:], dtype=np.float32)  # 1.IE   2.EA 
-       scaler_Y = StandardScaler()
-       scaler_Y.fit(Y)
+       IE = np.asarray(data_MP.values[:,1], dtype=np.float32)
+       EA = np.asarray(data_MP.values[:,2], dtype=np.float32) 
+       scaler_IE=StandardScaler()
+       scaler_IE.fit(IE)
+
+       scaler_EA=StandardScaler()
+       scaler_EA.fit(EA)
+       
        #=================================
        total_num = (len(ls_smi)//batch_size)*batch_size
        epochs = int(total_num/batch_size)
        print('the number of epochs is '+str(epochs))
-       tf.reset_default_graph()
-       model = Model(seqlen_x=43, dim_x=39, dim_y=2, char_set=char_set)
        
-       out = []
+       tf.reset_default_graph()
+       model = Model(seqlen_x=40, dim_x=39, dim_y=2, char_set=char_set)
+       
+       out_IE = []
+       out_EA = []
        ls_smi_new = [] 
 
        with model.session:
-              model.reload(model_name=model_name)
+              model.reload(model_name=model_IE)
               start = 0
               for epoch in range(epochs):
-                     print(epoch)
-                     X, Xs, ls_smi_new_batch = molecules(ls_smi[start:start+batch_size]).one_hot(char_set)
-                     Y_hat = scaler_Y.inverse_transform(model.predict(X))
+                     X, ls_smi_new_batch = molecules(ls_smi[start:start+batch_size]).one_hot(char_set)
+                     Y_hat_IE = scaler_IE.inverse_transform(model.predict(X))
                      ls_smi_new.extend(ls_smi_new_batch)
-                     out.append(Y_hat)
+                     out_IE.append(Y_hat_IE)
                      start += batch_size
-              Y_hat = np.concatenate(out, axis=0)
        
-       return ls_smi_new, Y_hat[:,0], Y_hat[:,1]
+       tf.reset_default_graph()
+
+       with model.session:
+              model.reload(model_name=model_EA)
+              start = 0
+              for epoch in range(epochs):
+                     X, ls_smi_new_batch = molecules(ls_smi[start:start+batch_size]).one_hot(char_set)
+                     Y_hat_EA = scaler_EA.inverse_transform(model.predict(X))
+                     ls_smi_new.extend(ls_smi_new_batch)
+                     out_EA.append(Y_hat_EA)
+                     start += batch_size
+       
+       out_IE = np.concatenate(out_IE, axis=0)
+       out_EA = np.concatenate(out_EA, axis=0)
+       
+       return ls_smi_new, out_IE, out_EA
 
 
-def SMILES_onehot_prediction(ls_smi, model_name=None, char_set=None, data_MP=None):
+def SMILES_onehot_prediction(ls_smi, model_IE=None, model_EA=None, char_set=None, data_MP=None):
        '''
        the function is to predict IE and EA from SMILES one-hot encoding for all the molecules at once.
        It will return the prediction IE and EA simultaneously. 
@@ -122,19 +141,31 @@ def SMILES_onehot_prediction(ls_smi, model_name=None, char_set=None, data_MP=Non
        '''
        
        #========= IE and EA normalization =========
-       Y = np.asarray(data_MP.values[:,1:], dtype=np.float32)  # 1.IE   2.EA 
-       scaler_Y = StandardScaler()
-       scaler_Y.fit(Y)
+       IE = np.asarray(data_MP.values[:,1], dtype=np.float32)
+       EA = np.asarray(data_MP.values[:,2], dtype=np.float32) 
+       scaler_IE=StandardScaler()
+       scaler_IE.fit(IE)
+
+       scaler_EA=StandardScaler()
+       scaler_EA.fit(EA)
        #===========================================
        tf.reset_default_graph()
-       model = Model(seqlen_x=43, dim_x=39, dim_y=2, char_set=char_set)
+       model = Model(seqlen_x=40, dim_x=39, dim_y=2, char_set=char_set)
 
        with model.session:
-              model.reload(model_name=model_name)
-              X, Xs, ls_smi_new = molecules(ls_smi).one_hot(char_set)
-              Y_hat = scaler_Y.inverse_transform(model.predict(X))
+              model.reload(model_name=model_IE)
+              X, ls_smi_new = molecules(ls_smi).one_hot(char_set)
+              out_IE = scaler_IE.inverse_transform(model.predict(X))
        
-       return ls_smi_new, Y_hat[:,0], Y_hat[:,1]
+       tf.reset_default_graph()
+
+       with model.session:
+              model.reload(model_name=model_EA)
+              X, ls_smi_new = molecules(ls_smi).one_hot(char_set)
+              out_EA = scaler_EA.inverse_transform(model.predict(X))
+
+       
+       return ls_smi_new, out_IE, out_EA
 
 
 

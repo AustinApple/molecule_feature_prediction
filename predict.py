@@ -3,9 +3,14 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error
-from .RNN_property_predictor import Model
-from .feature import molecules
+try:
+       from RNN_property_predictor import Model
+       from feature import molecules
+except:
+       from .RNN_property_predictor import Model
+       from .feature import molecules
 import time
+
 # cannot sure which version of tensorflow is
 try:
        import tensorflow.compat.v1 as tf 
@@ -17,12 +22,8 @@ except:
 def ECFPNUM_prediction_batch(ls_smi, batch_size=2048, model_IE=None, model_EA=None):
        '''
        this function is to predict IE and EA from ECFPNUM batch by batch, when the amount of data is massive.
-       Warning : you will lose some molecules by using this mehtod. 
-       In this stage, I separate IE and EA temporily, in the future I consider train a model which predict IE and EA simultaneous
-       But, I am not sure whether doing so can lead to a better prediction. 
-
+       
        Example: 
-
        model_IE = load_model("model_ECFP/ECFPNUM_IE.h5")
        model_EA = load_model("model_ECFP/ECFPNUM_EA.h5")
        ls_smi = pd.read_csv("OUTPUT")['smiles'].tolist()
@@ -30,10 +31,11 @@ def ECFPNUM_prediction_batch(ls_smi, batch_size=2048, model_IE=None, model_EA=No
        '''
        
        epochs = int(len(ls_smi)//batch_size)
-       print('the number of epochs is '+str(epochs))
+
        start = 0 
        out_IE = []
        out_EA = [] 
+       
        for epoch in range(epochs):
               fp_ECFPNUM = molecules(ls_smi[start:start+batch_size]).ECFPNUM()
               out_IE.append(model_IE.predict(fp_ECFPNUM))
@@ -67,7 +69,6 @@ def ECFPNUM_prediction(ls_smi, model_IE=None, model_EA=None):
 def SMILES_onehot_prediction_batch(ls_smi, model_IE=None, model_EA=None, char_set=None, data_MP=None, batch_size=1024):
        '''
        the function is to predict IE and EA from SMILES one-hot encoding batch by batch, when the amount of data is massive. 
-       It will return the prediction IE and EA simultaneously. 
        
        Example:
        
@@ -193,7 +194,7 @@ if __name__ == '__main__':
        # data['smiles'] = ls_smi
        # data['IE'] = IE
        # data['EA'] = EA
-       # data.to_csv("result_ECFPNUM.csv", index=False)
+       # data.to_csv("result_test.csv", index=False)
        
        # end = time.time()
        # print("the execution time "+str(end-start))
@@ -204,11 +205,11 @@ if __name__ == '__main__':
        
        # model_IE = load_model("model_ECFP/ECFPNUM_IE.h5")
        # model_EA = load_model("model_ECFP/ECFPNUM_EA.h5")
-       # ls_smi = pd.read_csv("OUTPUT_multi_latest/all_le_40.csv")['smiles'].tolist()[:100000]
-       # ls_smi_new, IE, EA = ECFPNUM_prediction_batch(ls_smi, model_IE=model_IE, model_EA=model_EA)
+       # ls_smi = pd.read_csv("MP_clean_canonize_cut.csv")['smiles'].tolist()[:10000]
+       # IE, EA = ECFPNUM_prediction_batch(ls_smi, model_IE=model_IE, model_EA=model_EA)
 
        # data = pd.DataFrame(columns=['smiles', 'IE', 'EA'])
-       # data['smiles'] = ls_smi_new
+       # data['smiles'] = ls_smi
        # data['IE'] = IE
        # data['EA'] = EA
        # data.to_csv("result_test.csv", index=False)
@@ -219,22 +220,25 @@ if __name__ == '__main__':
 
 
 
-       start = time.time()
+       # start = time.time()
 
-       char_set=[" ", "@", "H", "N", "S", "o", "i", "6", "I", "]", "P", "5", ")", "4", "8", "B", "F", 
-              "3", "9", "c", "-", "2", "p", "0", "n", "C", "(", "=", "+", "#", "1", "/", "7", 
-              "s", "O", "[", "Cl", "Br", "\\"]
-       data_MP = pd.read_csv('MP_clean_canonize_cut.csv')
-       ls_smi = data_MP['smiles'].tolist()
+       # char_set=[" ", "@", "H", "N", "S", "o", "i", "6", "I", "]", "P", "5", ")", "4", "8", "B", "F", 
+       #        "3", "9", "c", "-", "2", "p", "0", "n", "C", "(", "=", "+", "#", "1", "/", "7", 
+       #        "s", "O", "[", "Cl", "Br", "\\"]
+       # data_MP = pd.read_csv('MP_clean_canonize_cut.csv')
        # ls_smi = ['CC(Cl)OCC#N','CC(Cl)CO','CC(C)CCC(F)(F)F','ClCOC1CO1','CCC(C)CC(F)(F)F','OCF','CF']
        
-       ls_smi_new, IE, EA = SMILES_onehot_prediction(ls_smi, model_IE='model_RNN/RNN_model_IE.ckpt', 
-                                                     model_EA='model_RNN/RNN_model_EA.ckpt',char_set=char_set, data_MP=data_MP)
+       # ls_smi_new, IE, EA = SMILES_onehot_prediction(ls_smi, 
+       #                                               model_IE='model_RNN/RNN_model_IE.ckpt', 
+       #                                               model_EA='model_RNN/RNN_model_EA.ckpt',
+       #                                               char_set=char_set, 
+       #                                               data_MP=data_MP)
+       
        # data = pd.DataFrame(columns=['smiles', 'IE', 'EA'])
        # data['smiles'] = ls_smi_new
        # data['IE'] = IE
        # data['EA'] = EA
-       # data.to_csv("result.csv", index=False)
+       # data.to_csv("result_test.csv", index=False)
        
        # end = time.time()
        # print("the execution time "+str(end-start))
@@ -247,14 +251,18 @@ if __name__ == '__main__':
        #        "3", "9", "c", "-", "2", "p", "0", "n", "C", "(", "=", "+", "#", "1", "/", "7", 
        #        "s", "O", "[", "Cl", "Br", "\\"]
        # data_MP = pd.read_csv('MP_clean_canonize_cut.csv')
-       # ls_smi = pd.read_csv("OUTPUT_multi_latest/all_le_40.csv")['smiles'].tolist()
-       # ls_smi_new, IE, EA = SMILES_onehot_prediction_batch(ls_smi, model_name='model_SMILES/model',char_set=char_set, data_MP=data_MP, batch_size=2048)
+       # ls_smi = pd.read_csv('MP_clean_canonize_cut.csv')['smiles'].tolist()[:10000]
+       # ls_smi_new, IE, EA = SMILES_onehot_prediction_batch(ls_smi, 
+       #                                                     model_IE='model_RNN/RNN_model_IE.ckpt', 
+       #                                                     model_EA='model_RNN/RNN_model_EA.ckpt', 
+       #                                                     char_set=char_set, data_MP=data_MP, 
+       #                                                     batch_size=2048)
        
        # data = pd.DataFrame(columns=['smiles', 'IE', 'EA'])
        # data['smiles'] = ls_smi_new
        # data['IE'] = IE
        # data['EA'] = EA
-       # data.to_csv("result_substitution.csv", index=False)
+       # data.to_csv("result_test.csv", index=False)
        
        # end = time.time()
        # print("the execution time "+str(end-start))

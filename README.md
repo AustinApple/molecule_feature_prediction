@@ -27,5 +27,5 @@ If the data is too huge to process, we can use `ECFPNUM_prediction_batch()`
 model_IE = load_model("model_ECFP/ECFPNUM_IE.h5")
 model_EA = load_model("model_ECFP/ECFPNUM_EA.h5")
 ls_smi = pd.read_csv("OUTPUT")['smiles'].tolist()
-ls_smi_new, IE, EA = ECFPNUM_prediction_batch(ls_smi, batch_size=1024, model_IE=model_IE, model_EA=model_EA)
+IE, EA = ECFPNUM_prediction_batch(ls_smi, batch_size=1024, model_IE=model_IE, model_EA=model_EA)
 ```

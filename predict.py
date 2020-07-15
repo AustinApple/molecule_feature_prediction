@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error
-from RNN_property_predictor import Model
-from feature import molecules
+from .RNN_property_predictor import Model
+from .feature import molecules
 import time
 # cannot sure which version of tensorflow is
 try:
@@ -27,24 +27,27 @@ def ECFPNUM_prediction_batch(ls_smi, batch_size=2048, model_IE=None, model_EA=No
        model_EA = load_model("model_ECFP/ECFPNUM_EA.h5")
        ls_smi = pd.read_csv("OUTPUT")['smiles'].tolist()
        ls_smi_new, IE, EA = ECFPNUM_prediction_batch(ls_smi, batch_size=1024, model_IE=model_IE, model_EA=model_EA)
-
        '''
-       total_num = (len(ls_smi)//batch_size)*batch_size
-       epochs = int(total_num/batch_size)
+       
+       epochs = int(len(ls_smi)//batch_size)
        print('the number of epochs is '+str(epochs))
        start = 0 
        out_IE = []
        out_EA = [] 
        for epoch in range(epochs):
-              print(epoch)
               fp_ECFPNUM = molecules(ls_smi[start:start+batch_size]).ECFPNUM()
               out_IE.append(model_IE.predict(fp_ECFPNUM))
               out_EA.append(model_EA.predict(fp_ECFPNUM))
               start += batch_size
+       
+       fp_ECFPNUM = molecules(ls_smi[start:]).ECFPNUM()
+       out_IE.append(model_IE.predict(fp_ECFPNUM))
+       out_EA.append(model_EA.predict(fp_ECFPNUM))
+
        out_IE = np.concatenate(out_IE, axis=0)
        out_EA = np.concatenate(out_EA, axis=0)
     
-       return ls_smi[:total_num], out_IE, out_EA
+       return out_IE, out_EA
 
 
 def ECFPNUM_prediction(ls_smi, model_IE=None, model_EA=None):
@@ -77,8 +80,8 @@ def SMILES_onehot_prediction_batch(ls_smi, model_IE=None, model_EA=None, char_se
        '''
        
        #========= normalization =========
-       IE = np.asarray(data_MP.values[:,1], dtype=np.float32)
-       EA = np.asarray(data_MP.values[:,2], dtype=np.float32) 
+       IE = np.asarray(data_MP.values[:,1], dtype=np.float32).reshape(-1, 1)
+       EA = np.asarray(data_MP.values[:,2], dtype=np.float32).reshape(-1, 1)
        scaler_IE=StandardScaler()
        scaler_IE.fit(IE)
 
@@ -86,12 +89,10 @@ def SMILES_onehot_prediction_batch(ls_smi, model_IE=None, model_EA=None, char_se
        scaler_EA.fit(EA)
        
        #=================================
-       total_num = (len(ls_smi)//batch_size)*batch_size
-       epochs = int(total_num/batch_size)
-       print('the number of epochs is '+str(epochs))
+       epochs = int(len(ls_smi)//batch_size)
        
        tf.reset_default_graph()
-       model = Model(seqlen_x=40, dim_x=39, dim_y=2, char_set=char_set)
+       model = Model(seqlen_x=40, dim_x=39, dim_y=1, char_set=char_set)
        
        out_IE = []
        out_EA = []
@@ -106,18 +107,25 @@ def SMILES_onehot_prediction_batch(ls_smi, model_IE=None, model_EA=None, char_se
                      ls_smi_new.extend(ls_smi_new_batch)
                      out_IE.append(Y_hat_IE)
                      start += batch_size
-       
-       tf.reset_default_graph()
 
-       with model.session:
+              X, ls_smi_new_batch = molecules(ls_smi[start:]).one_hot(char_set)
+              Y_hat_IE = scaler_IE.inverse_transform(model.predict(X))
+              ls_smi_new.extend(ls_smi_new_batch)
+              out_IE.append(Y_hat_IE)
+              
+
               model.reload(model_name=model_EA)
               start = 0
               for epoch in range(epochs):
                      X, ls_smi_new_batch = molecules(ls_smi[start:start+batch_size]).one_hot(char_set)
                      Y_hat_EA = scaler_EA.inverse_transform(model.predict(X))
-                     ls_smi_new.extend(ls_smi_new_batch)
                      out_EA.append(Y_hat_EA)
                      start += batch_size
+
+              X, ls_smi_new_batch = molecules(ls_smi[start:]).one_hot(char_set)
+              Y_hat_EA = scaler_EA.inverse_transform(model.predict(X))
+              out_EA.append(Y_hat_EA)
+
        
        out_IE = np.concatenate(out_IE, axis=0)
        out_EA = np.concatenate(out_EA, axis=0)

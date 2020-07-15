@@ -3,10 +3,8 @@ from rdkit.Chem import AllChem
 from rdkit import Chem
 from rdkit.Chem import Draw
 import pandas as pd
-import openbabel
-import numpy as np 
+import numpy as np
 import os 
-import openbabel
 import argparse
 from biopandas.mol2 import PandasMol2
 from keras.models import load_model
@@ -15,7 +13,9 @@ try:
     from tensorflow.keras import preprocessing
 except:
     from tensorflow.contrib.keras import preprocessing
+import openbabel
 
+#openbabel should be imported after importing tensorflow
 
 class molecules():
     '''
@@ -121,6 +121,52 @@ class molecules():
   
 
         return one_hot, self.ls_smiles
+    
+    def one_hot_2D_CNN(self, char_set):
+        '''
+        this function is to convert the smile inton one-hot encoding. 
+        Parameter char_set includes all the character in all the SMILES. 
+        
+        If one of characters in a SMILES is not included in char_set,
+        then the SMILES will be removed from the SMILES list and this function
+        will return a new SMIELS list.
+        '''
+        
+        char_to_int = dict((c,i) for i,c in enumerate(char_set))
+        list_seq=[]
+        
+        for s in self.ls_smiles[:]:
+            
+            seq=[]                      
+            j=0
+            while j<len(s):
+                if j<len(s)-1 and s[j:j+2] in char_set:
+                    seq.append(char_to_int[s[j:j+2]])
+                    j=j+2
+                elif s[j] in char_set:
+                    seq.append(char_to_int[s[j]])
+                    j=j+1
+                elif s[j:j+2] not in char_set and s[j] not in char_set:
+                    self.ls_smiles.remove(s)
+                    seq=[]
+                    break
+            if seq == []:
+                continue
+            list_seq.append(seq)
+        
+        
+            
+             
+        list_seq = preprocessing.sequence.pad_sequences(list_seq, maxlen=40, padding='post')
+        
+        one_hot = np.zeros((list_seq.shape[0], list_seq.shape[1], len(char_set), 1), dtype=np.int8)
+
+        for si, ss in enumerate(list_seq):
+            for cj, cc in enumerate(ss):
+                one_hot[si,cj,cc,0] = 1
+  
+
+        return one_hot, self.ls_smiles
 
 
     def one_hot_RNN(self, char_set):
@@ -166,6 +212,8 @@ class molecules():
 
 
         return one_hot[:,0:-1,:], one_hot[:,1:,:]
+
+    
 
 def check_in_char_set(ls_smiles, char_set):
     '''

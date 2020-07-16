@@ -3,7 +3,7 @@ These codes are for converting molecule stuctures (SMILES) into different repres
 ## Tutorial
 ### Convert a list of SMILES into different representation arrays (SYBYL, ECFP, ECFPNUM, SMILES(one-hot))
 ```
-from feature import molecules
+from molecule_feature_prediction.feature import molecules
 
 ls_smi = ['C1COC(=O)O1', 'COC(=O)OC', 'O=C(OCC)OCC']
 SYBYL = molecules(ls_smi).SYBYL() 

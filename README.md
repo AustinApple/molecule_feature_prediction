@@ -5,7 +5,8 @@ These codes are for converting molecule stuctures (SMILES) into different repres
 ```
 from molecule_feature_prediction.feature import molecules
 
-ls_smi = ['C1COC(=O)O1', 'COC(=O)OC', 'O=C(OCC)OCC']
+#ls_smi = ['C1COC(=O)O1', 'COC(=O)OC', 'O=C(OCC)OCC']
+ls_smi = pd.read_csv("MP_clean_canonize_cut.csv")['smiles'].tolist()
 SYBYL = molecules(ls_smi).SYBYL() 
 ECFP = molecules(ls_smi).ECFP(radius=2, nbits=2048)
 ECFPNUM = molecules(ls_smi).ECFPNUM(radius=2, nbits=2048)

@@ -19,15 +19,9 @@ except:
        import tensorflow as tf
        
 
-def ECFPNUM_prediction_batch(ls_smi, batch_size=2048, model_IE=None, model_EA=None):
+def ECFPNUM_NN_prediction_batch(ls_smi, batch_size=2048, model_IE=None, model_EA=None):
        '''
        this function is to predict IE and EA from ECFPNUM batch by batch, when the amount of data is massive.
-       
-       Example: 
-       model_IE = load_model("model_ECFP/ECFPNUM_IE.h5")
-       model_EA = load_model("model_ECFP/ECFPNUM_EA.h5")
-       ls_smi = pd.read_csv("OUTPUT")['smiles'].tolist()
-       ls_smi_new, IE, EA = ECFPNUM_prediction_batch(ls_smi, batch_size=1024, model_IE=model_IE, model_EA=model_EA)
        '''
        
        epochs = int(len(ls_smi)//batch_size)
@@ -52,32 +46,17 @@ def ECFPNUM_prediction_batch(ls_smi, batch_size=2048, model_IE=None, model_EA=No
        return out_IE, out_EA
 
 
-def ECFPNUM_prediction(ls_smi, model_IE=None, model_EA=None):
+def ECFPNUM_NN_prediction(ls_smi, model_IE=None, model_EA=None):
        '''
        this function is to predict IE and EA from ECFPNUM for all the molecules at once.
-       Example: 
-
-       model_IE = load_model("model_ECFP/ECFPNUM_IE.h5")
-       model_EA = load_model("model_ECFP/ECFPNUM_EA.h5")
-       ls_smi = pd.read_csv("OUTPUT")['smiles'].tolist()
-       IE, EA = ECFPNUM_prediction(ls_smi, model_IE=model_IE, model_EA=model_EA)
        '''
        fp_ECFPNUM = molecules(ls_smi).ECFPNUM()
        return model_IE.predict(fp_ECFPNUM), model_EA.predict(fp_ECFPNUM)
 
 
-def SMILES_onehot_prediction_batch(ls_smi, model_IE=None, model_EA=None, char_set=None, data_MP=None, batch_size=1024):
+def SMILES_onehot_RNN_prediction_batch(ls_smi, model_IE=None, model_EA=None, char_set=None, data_MP=None, batch_size=1024):
        '''
        the function is to predict IE and EA from SMILES one-hot encoding batch by batch, when the amount of data is massive. 
-       
-       Example:
-       
-       char_set=[" ", "@", "H", "N", "S", "o", "i", "6", "I", "]", "P", "5", ")", "4", "8", "B", "F", 
-              "3", "9", "c", "-", "2", "p", "0", "n", "C", "(", "=", "+", "#", "1", "/", "7", 
-              "s", "O", "[", "Cl", "Br", "\\"]
-       data_MP = pd.read_csv('MP_clean_canonize_cut.csv')
-       ls_smi = pd.read_csv('OUTPUT.csv')['smiles'].tolist()
-       ls_smi_new, IE, EA = SMILES_onehot_prediction_batch(ls_smi, model_name='model_SMILES/model',char_set=char_set, data_MP=data_MP, batch_size=2048)
        '''
        
        #========= normalization =========
@@ -134,19 +113,9 @@ def SMILES_onehot_prediction_batch(ls_smi, model_IE=None, model_EA=None, char_se
        return ls_smi_new, out_IE, out_EA
 
 
-def SMILES_onehot_prediction(ls_smi, model_IE=None, model_EA=None, char_set=None, data_MP=None):
+def SMILES_onehot_RNN_prediction(ls_smi, model_IE=None, model_EA=None, char_set=None, data_MP=None):
        '''
        the function is to predict IE and EA from SMILES one-hot encoding for all the molecules at once.
-       It will return the prediction IE and EA simultaneously. 
-       
-       Example:
-       
-       char_set=[" ", "@", "H", "N", "S", "o", "i", "6", "I", "]", "P", "5", ")", "4", "8", "B", "F", 
-              "3", "9", "c", "-", "2", "p", "0", "n", "C", "(", "=", "+", "#", "1", "/", "7", 
-              "s", "O", "[", "Cl", "Br", "\\"]
-       data_MP = pd.read_csv('MP_clean_canonize_cut.csv')
-       ls_smi = pd.read_csv('OUTPUT.csv')['smiles'].tolist()
-       ls_smi_new, IE, EA = SMILES_onehot_prediction(ls_smi, model_name=',char_set=char_set, data_MP=data_MP)
        '''
        
        #========= IE and EA normalization =========
@@ -188,7 +157,7 @@ if __name__ == '__main__':
        # model_IE = load_model("model_ECFP/ECFPNUM_IE.h5")
        # model_EA = load_model("model_ECFP/ECFPNUM_EA.h5")
        # ls_smi = ['CC(Cl)OCC#N','CC(Cl)CO','CC(C)CCC(F)(F)F','ClCOC1CO1','CCC(C)CC(F)(F)F','OCF','CF']
-       # IE, EA = ECFPNUM_prediction(ls_smi, model_IE=model_IE, model_EA=model_EA)
+       # IE, EA = ECFPNUM_NN_prediction(ls_smi, model_IE=model_IE, model_EA=model_EA)
 
        # data = pd.DataFrame(columns=['smiles', 'IE', 'EA'])
        # data['smiles'] = ls_smi
@@ -206,7 +175,7 @@ if __name__ == '__main__':
        # model_IE = load_model("model_ECFP/ECFPNUM_IE.h5")
        # model_EA = load_model("model_ECFP/ECFPNUM_EA.h5")
        # ls_smi = pd.read_csv("MP_clean_canonize_cut.csv")['smiles'].tolist()[:10000]
-       # IE, EA = ECFPNUM_prediction_batch(ls_smi, model_IE=model_IE, model_EA=model_EA)
+       # IE, EA = ECFPNUM_NN_prediction_batch(ls_smi, model_IE=model_IE, model_EA=model_EA)
 
        # data = pd.DataFrame(columns=['smiles', 'IE', 'EA'])
        # data['smiles'] = ls_smi
@@ -228,7 +197,7 @@ if __name__ == '__main__':
        # data_MP = pd.read_csv('MP_clean_canonize_cut.csv')
        # ls_smi = ['CC(Cl)OCC#N','CC(Cl)CO','CC(C)CCC(F)(F)F','ClCOC1CO1','CCC(C)CC(F)(F)F','OCF','CF']
        
-       # ls_smi_new, IE, EA = SMILES_onehot_prediction(ls_smi, 
+       # ls_smi_new, IE, EA = SMILES_onehot_RNN_prediction(ls_smi, 
        #                                               model_IE='model_RNN/RNN_model_IE.ckpt', 
        #                                               model_EA='model_RNN/RNN_model_EA.ckpt',
        #                                               char_set=char_set, 
@@ -245,36 +214,24 @@ if __name__ == '__main__':
 
 
        
-       # start = time.time()
+       start = time.time()
 
-       # char_set=[" ", "@", "H", "N", "S", "o", "i", "6", "I", "]", "P", "5", ")", "4", "8", "B", "F", 
-       #        "3", "9", "c", "-", "2", "p", "0", "n", "C", "(", "=", "+", "#", "1", "/", "7", 
-       #        "s", "O", "[", "Cl", "Br", "\\"]
-       # data_MP = pd.read_csv('MP_clean_canonize_cut.csv')
-       # ls_smi = pd.read_csv('MP_clean_canonize_cut.csv')['smiles'].tolist()[:10000]
-       # ls_smi_new, IE, EA = SMILES_onehot_prediction_batch(ls_smi, 
-       #                                                     model_IE='model_RNN/RNN_model_IE.ckpt', 
-       #                                                     model_EA='model_RNN/RNN_model_EA.ckpt', 
-       #                                                     char_set=char_set, data_MP=data_MP, 
-       #                                                     batch_size=2048)
+       char_set=[" ", "@", "H", "N", "S", "o", "i", "6", "I", "]", "P", "5", ")", "4", "8", "B", "F", 
+              "3", "9", "c", "-", "2", "p", "0", "n", "C", "(", "=", "+", "#", "1", "/", "7", 
+              "s", "O", "[", "Cl", "Br", "\\"]
+       data_MP = pd.read_csv('MP_clean_canonize_cut.csv')
+       ls_smi = pd.read_csv('MP_clean_canonize_cut.csv')['smiles'].tolist()[:10000]
+       ls_smi_new, IE, EA = SMILES_onehot_RNN_prediction_batch(ls_smi, 
+                                                           model_IE='model_RNN/RNN_model_IE.ckpt', 
+                                                           model_EA='model_RNN/RNN_model_EA.ckpt', 
+                                                           char_set=char_set, data_MP=data_MP, 
+                                                           batch_size=2048)
        
-       # data = pd.DataFrame(columns=['smiles', 'IE', 'EA'])
-       # data['smiles'] = ls_smi_new
-       # data['IE'] = IE
-       # data['EA'] = EA
-       # data.to_csv("result_test.csv", index=False)
+       data = pd.DataFrame(columns=['smiles', 'IE', 'EA'])
+       data['smiles'] = ls_smi_new
+       data['IE'] = IE
+       data['EA'] = EA
+       data.to_csv("result_test.csv", index=False)
        
-       # end = time.time()
-       # print("the execution time "+str(end-start))
-
-
-
-
-
-
-   
-
-
-
-
-
+       end = time.time()
+       print("the execution time "+str(end-start))

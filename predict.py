@@ -82,13 +82,13 @@ def SMILES_onehot_RNN_prediction_batch(ls_smi, model_IE=None, model_EA=None, cha
               model.reload(model_name=model_IE)
               start = 0
               for epoch in range(epochs):
-                     X, ls_smi_new_batch = molecules(ls_smi[start:start+batch_size]).one_hot(char_set)
+                     X, ls_smi_new_batch, ls_new_index = molecules(ls_smi[start:start+batch_size]).one_hot(char_set)
                      Y_hat_IE = scaler_IE.inverse_transform(model.predict(X))
                      ls_smi_new.extend(ls_smi_new_batch)
                      out_IE.append(Y_hat_IE)
                      start += batch_size
 
-              X, ls_smi_new_batch = molecules(ls_smi[start:]).one_hot(char_set)
+              X, ls_smi_new_batch, ls_new_index = molecules(ls_smi[start:]).one_hot(char_set)
               Y_hat_IE = scaler_IE.inverse_transform(model.predict(X))
               ls_smi_new.extend(ls_smi_new_batch)
               out_IE.append(Y_hat_IE)
@@ -97,12 +97,12 @@ def SMILES_onehot_RNN_prediction_batch(ls_smi, model_IE=None, model_EA=None, cha
               model.reload(model_name=model_EA)
               start = 0
               for epoch in range(epochs):
-                     X, ls_smi_new_batch = molecules(ls_smi[start:start+batch_size]).one_hot(char_set)
+                     X, ls_smi_new_batch, ls_new_index = molecules(ls_smi[start:start+batch_size]).one_hot(char_set)
                      Y_hat_EA = scaler_EA.inverse_transform(model.predict(X))
                      out_EA.append(Y_hat_EA)
                      start += batch_size
 
-              X, ls_smi_new_batch = molecules(ls_smi[start:]).one_hot(char_set)
+              X, ls_smi_new_batch, ls_new_index = molecules(ls_smi[start:]).one_hot(char_set)
               Y_hat_EA = scaler_EA.inverse_transform(model.predict(X))
               out_EA.append(Y_hat_EA)
 
@@ -132,11 +132,11 @@ def SMILES_onehot_RNN_prediction(ls_smi, model_IE=None, model_EA=None, char_set=
 
        with model.session:
               model.reload(model_name=model_IE)
-              X, ls_smi_new = molecules(ls_smi).one_hot(char_set)
+              X, ls_smi_new, ls_new_index = molecules(ls_smi).one_hot(char_set)
               out_IE = scaler_IE.inverse_transform(model.predict(X))
 
               model.reload(model_name=model_EA)
-              X, ls_smi_new = molecules(ls_smi).one_hot(char_set)
+              X, ls_smi_new, ls_new_index = molecules(ls_smi).one_hot(char_set)
               out_EA = scaler_EA.inverse_transform(model.predict(X))
 
        

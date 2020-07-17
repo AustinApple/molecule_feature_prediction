@@ -32,18 +32,22 @@ class molecules():
         '''
         atomtype_to_int = dict((a,i) for i,a in enumerate(atomtype_set))
         array_fp = np.zeros((len(self.ls_smiles), len(atomtype_set)))
+
         for i, smi in enumerate(self.ls_smiles):
-            obconversion = openbabel.OBConversion()
-            obconversion.SetInAndOutFormats("smi", "mol2")
-            mol = openbabel.OBMol()
-            obconversion.ReadString(mol,smi)  # read molecule from database 
-            mol.AddHydrogens()
-            output_mol2 = obconversion.WriteString(mol)  # transform smiles into mol2
-            with open("molecule.mol2","w+") as file:   # write mol2 format into the file, molecule.mol2.
-                file.write(output_mol2)
-            molecule_mol2 = PandasMol2().read_mol2("molecule.mol2")  # use biopandas to static the discriptors
-            for atomtype in molecule_mol2.df['atom_type'].value_counts().index:
-                array_fp[i,atomtype_to_int[atomtype]] = molecule_mol2.df['atom_type'].value_counts()[atomtype]
+            try:
+                obconversion = openbabel.OBConversion()
+                obconversion.SetInAndOutFormats("smi", "mol2")
+                mol = openbabel.OBMol()
+                obconversion.ReadString(mol,smi)  # read molecule from database 
+                mol.AddHydrogens()
+                output_mol2 = obconversion.WriteString(mol)  # transform smiles into mol2
+                with open("molecule.mol2","w+") as file:   # write mol2 format into the file, molecule.mol2.
+                    file.write(output_mol2)
+                molecule_mol2 = PandasMol2().read_mol2("molecule.mol2")  # use biopandas to static the discriptors
+                for atomtype in molecule_mol2.df['atom_type'].value_counts().index:
+                    array_fp[i,atomtype_to_int[atomtype]] = molecule_mol2.df['atom_type'].value_counts()[atomtype]
+            except:
+                continue
         return array_fp
 
     def ECFP(self, radius=2, nbits=2048):
@@ -52,10 +56,13 @@ class molecules():
         '''
         arr_fp = np.zeros((len(self.ls_smiles), nbits))
         for i, smi in enumerate(self.ls_smiles):
-            mol = Chem.MolFromSmiles(smi)
-            fp = AllChem.GetMorganFingerprintAsBitVect(mol, radius, nBits=nbits).ToBitString()
-            for j in range(nbits):
-                arr_fp[i,j] = fp[j]
+            try:
+                mol = Chem.MolFromSmiles(smi)
+                fp = AllChem.GetMorganFingerprintAsBitVect(mol, radius, nBits=nbits).ToBitString()
+                for j in range(nbits):
+                    arr_fp[i,j] = fp[j]
+            except:
+                continue
         return arr_fp
         
     def ECFPNUM(self, radius=2, nbits=2048):
@@ -87,10 +94,12 @@ class molecules():
         '''
         
         char_to_int = dict((c,i) for i,c in enumerate(char_set))
+
+        ls_index = [i for i in range(len(self.ls_smiles))]
         list_seq=[]
         
-        for s in self.ls_smiles[:]:
-            
+
+        for i, s in enumerate(self.ls_smiles[:]):
             seq=[]                      
             j=0
             while j<len(s):
@@ -101,6 +110,7 @@ class molecules():
                     seq.append(char_to_int[s[j]])
                     j=j+1
                 elif s[j:j+2] not in char_set and s[j] not in char_set:
+                    ls_index.remove(i)
                     self.ls_smiles.remove(s)
                     seq=[]
                     break
@@ -120,7 +130,7 @@ class molecules():
                 one_hot[si,cj,cc] = 1
   
 
-        return one_hot, self.ls_smiles
+        return one_hot, self.ls_smiles, ls_index
     
     def one_hot_2D_CNN(self, char_set):
         '''

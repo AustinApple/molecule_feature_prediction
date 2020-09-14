@@ -1,6 +1,5 @@
 # molecule_feature_prediction
 These codes are for converting molecule stuctures (SMILES) into different representations(SYBYL, ECFP, ECFP&SYBYL, ECFPNUM, SMILES(one-hot)). And different representation ML models have been trained for the prediction of ionization energy (IE) and electron affinity (EA) by the data from Material project database.
-![image](https://github.com/AustinApple/molecule_feature_prediction/blob/master/molecule_modification_algorithm.001.png)
 ## Tutorial
 ### Convert a list of SMILES into different representation arrays (SYBYL, ECFP, ECFPNUM, SMILES(one-hot))
 ```
